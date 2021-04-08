@@ -15,6 +15,8 @@ from bs4 import BeautifulSoup
 # gonna add things like showing which song currently playing, status stuff like that
 # moderation commands tommorow
 
+#go
+
 
 prefix = '.'
 embed_color = discord.Color.blue()
