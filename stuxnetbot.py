@@ -12,6 +12,7 @@ import random
 from gtts import gTTS
 from bs4 import BeautifulSoup
 import json
+import random
 
 # gonna add things like showing which song currently playing, status stuff like that
 # moderation commands tommorow
@@ -97,6 +98,11 @@ async def on_member_join(member):
 
             with open('invites.json', 'w') as f:
                 f.write(data)
+
+    channel = client.get_channel(830049096776548353)
+    n = len(guild.members)
+    await channel.edit(name=f'Members: {n}')
+
 
     # a = 0
     # for _ in invitess[member.guild.id]:
@@ -241,6 +247,8 @@ async def help(ctx):
     embed.add_field(name=f'{prefix}covid_pakistan_stats',value='***VERY DETAILED PAKISTAN COVID STATS***', inline = False)
     embed.add_field(name=f'{prefix}invites',value='check invites, users who left will be removed!', inline = False)
     embed.add_field(name=f'{prefix}invites_details',value='check exactly who u invited!, users who left will be removed!', inline = False)
+    embed.add_field(name=f'{prefix}truth',value='Get a random truth!')
+    embed.add_field(name=f'{prefix}dare',value='Get a random dare!')
     await ctx.send(embed=embed)
 
 
@@ -529,7 +537,7 @@ async def accept(ctx, user: discord.Member = None):
         channel = client.get_channel(830005385670033429)
         embed = discord.Embed(
             title='Application Accepted!',
-            description=f'<@!{user.id}> Your Application Has Been Accepted Contact Ceo For Role',
+            description=f'<@!{user.id}> Your Application Has Been Accepted Contact Mr. Stark For Role',
             color=embed_color
         )
         await channel.send(embed=embed)
@@ -883,6 +891,19 @@ async def invites_details(ctx, member: discord.Member=None):
     else:
         await em(ctx, f'{member.name} has 0 invites')
 
+@client.command(aliases=['t',])
+async def truth(ctx):
+    with open('truths.txt', 'r') as f:
+        tr = random.choice(f.read().split('\n\n'))
+
+    await em(ctx, tr)
+
+@client.command(aliases=['d',])
+async def dare(ctx):
+    with open('dares.txt', 'r') as f:
+        dr = random.choice(f.read().split('\n'))
+
+    await em(ctx, dr)
 
 
 
