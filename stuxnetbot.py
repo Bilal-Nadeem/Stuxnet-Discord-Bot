@@ -850,7 +850,7 @@ async def invites(ctx, member: discord.Member=None):
         if d == mid:
             total += len(data[d])
 
-    await em(ctx, f'You have {total} invites!')
+    await em(ctx, f'{member.name} has {total} invites!')
 
 
 @client.command()
@@ -881,7 +881,7 @@ async def invites_details(ctx, member: discord.Member=None):
         await ctx.send(embed=embed)
 
     else:
-        await em(ctx, f'You have 0 invites')
+        await em(ctx, f'{member.name} has 0 invites')
 
 
 
