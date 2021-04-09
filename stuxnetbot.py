@@ -11,12 +11,12 @@ from io import BytesIO
 import random
 from gtts import gTTS
 from bs4 import BeautifulSoup
+import json
 
 # gonna add things like showing which song currently playing, status stuff like that
 # moderation commands tommorow
 
-#go
-
+#https://discord.new/nyqXzh9bvQwh First Template of stuxnet
 
 prefix = '.'
 embed_color = discord.Color.blue()
@@ -46,31 +46,108 @@ async def em(ctx, text, r=False):
     else:
         return embed
 
+invitess = {}
 
 @client.event
 async def on_ready():
-    global prefix
+    global prefix, invitess
     await client.change_presence(activity=discord.Game(f'{prefix}help'))
     print(f'Logged in as {client.user}')
 
+    for guild in client.guilds:
+        invitess[guild.id] = await guild.invites()
+
+
 @client.event
 async def on_member_join(member):
+    global invitess
     if not member.bot:
         guild = client.get_guild(829709301630369862)
         role = get(guild.roles, name="unverified")
         channel = client.get_channel(829709301630369865)
-        embed = discord.Embed(title="Welcome To StuxNet!",description=f"Make sure to check out ***self-roles*** <@!{member.id}>", color=discord.Color.blurple()) # Let's make an embed!
+        embed = discord.Embed(title="Welcome To StuxNet!",description=f"Make sure to check out <#829745111109337088> and <#829745133913636894> <@!{member.id}>", color=discord.Color.blurple()) # Let's make an embed!
         await channel.send(embed=embed)
-        channel = client.get_channel(829800785084284979)
-        embed = discord.Embed(title="Welcome To StuxNet!",description=f"Make sure to check out ***self-roles*** <@!{member.id}>", color=discord.Color.blurple()) # Let's make an embed!
-        await channel.send(embed=embed)
-
         await member.add_roles(role)
         
     else:
         guild = client.get_guild(829709301630369862)
         role = get(guild.roles, name="Bots")
         await member.add_roles(role)
+
+    invites_before_join = invitess[member.guild.id]
+    invites_after_join = await member.guild.invites()
+    for invite in invites_before_join:
+        if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
+            
+            channel = client.get_channel(829800785084284979)
+            embed = discord.Embed(title="Welcome To StuxNet!",description=f"<@!{member.id}> was invited by <@!{invite.inviter.id}>", color=discord.Color.blurple()) # Let's make an embed!
+            await channel.send(embed=embed)
+
+            invitess[member.guild.id] = invites_after_join
+
+            with open('invites.json', 'r') as f:
+                data = json.loads(f.read())
+
+            try:
+                data[f"{invite.inviter.id}"].append(member.id)
+            except:
+                data[invite.inviter.id] = [member.id]
+
+            data = json.dumps(data)
+
+            with open('invites.json', 'w') as f:
+                f.write(data)
+
+    # a = 0
+    # for _ in invitess[member.guild.id]:
+    #     a += _.uses
+    # print(a)
+
+#will add feature that if bot added and its not by me or ateeq then it gets kicked
+@client.event
+async def on_member_remove(member):
+
+    try:
+
+        with open('invites.json', 'r') as f:
+            data = json.loads(f.read())
+
+        for d in data:
+            checking = d
+            for _ in data[d]:
+                if _ == member.id:
+                    break
+
+        channel = client.get_channel(829994884521918474)
+        embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> that was invited by <@!{checking}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
+        await channel.send(embed=embed)
+
+
+        data[checking].remove(member.id)
+        
+        data = json.dumps(data)
+
+        with open('invites.json', 'w') as f:
+            f.write(data)
+
+    except:
+        channel = client.get_channel(829994884521918474)
+        embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
+        await channel.send(embed=embed)
+
+
+
+
+def find_invite_by_code(invite_list, code):
+    for inv in invite_list:
+        if inv.code == code:
+            return inv
+
+
+
+
+# @client.event
+# async def on_member_leave(member):
 
 emojis = {
     '👶': '👶 13-',
@@ -143,17 +220,11 @@ async def help(ctx):
     embed.add_field(name=f'{prefix}play or {prefix}p', value='Plays a song')
     embed.add_field(name=f'{prefix}pause', value='Pauses a song')
     embed.add_field(name=f'{prefix}resume', value='Resumes a song')
-    embed.add_field(
-        name=f'{prefix}stop or {prefix}skip or {prefix}s', value='stops/skips a song')
-    embed.add_field(name=f'{prefix}leave {prefix}l',
-                    value='leaves the voice channel')
+    embed.add_field(name=f'{prefix}stop or {prefix}skip or {prefix}s', value='stops/skips a song')
+    embed.add_field(name=f'{prefix}leave {prefix}l', value='leaves the voice channel')
     embed.add_field(name=f'{prefix}say',value='new text to speech feature', inline = False)
-    # embed.add_field(name=f'{prefix}change_prefix', value='Change bot prefix')
-    # embed.add_field(name=f'{prefix}change_embed', value='Change embed color')
-    # embed.add_field(name=f'{prefix}Application or {prefix}apply',
-    #                 value='You\'ll be asked certain question in dms, answer those and application will be')
-    # embed.add_field(name=f'{prefix}accept @user',
-    #                 value='Accept someones application (can only be used by administrators')
+    embed.add_field(name=f'{prefix}Application or {prefix}apply', value='You\'ll be asked certain question in dms, answer those and application will be sent')
+    embed.add_field(name=f'{prefix}accept @user', value='Accept someones application (can only be used by administrators')
     embed.add_field(name=f'{prefix}purge',value=f'purges n amount of messages\nExample: {prefix}purge 10', inline = False)
     embed.add_field(name=f'{prefix}poll', value='make a poll')
     embed.add_field(name=f'{prefix}av', value='Check someones avatar', inline=False)
@@ -168,6 +239,8 @@ async def help(ctx):
     embed.add_field(name=f'{prefix}covid_countries',value='check countries avialble for search in covid_stats. --covid_countries 1', inline = False)
     embed.add_field(name=f'{prefix}covid_stats',value=f'search covid stats for a specefic country, by default will give pakistans result. {prefix}covid_stats russia', inline = False)
     embed.add_field(name=f'{prefix}covid_pakistan_stats',value='***VERY DETAILED PAKISTAN COVID STATS***', inline = False)
+    embed.add_field(name=f'{prefix}invites',value='check invites, users who left will be removed!', inline = False)
+    embed.add_field(name=f'{prefix}invites_details',value='check exactly who u invited!, users who left will be removed!', inline = False)
     await ctx.send(embed=embed)
 
 
@@ -212,18 +285,6 @@ async def play(ctx, *, video_link):
     else:
         await em(ctx, "Already playing song, currently i dont support queues")
         return
-
-
-# @client.command()
-# async def change_prefix(ctx, cprefix):
-#     global prefix
-#     prefix = cprefix
-
-
-# @client.command()
-# async def change_embed_color(ctx, cembed):
-#     global embed_color
-#     embed_color = cembed
 
 
 @client.command()
@@ -351,19 +412,6 @@ async def idinfo(ctx, user_id):
     await ctx.send(embed=embed)
 
 
-# @client.command()
-# async def accept(ctx, user: discord.Member = None):
-#     global embed_color
-#     if ctx.message.author.guild_permissions.administrator:
-#         channel = client.get_channel(816286236457041966)
-#         embed = discord.Embed(
-#             title='Application Accepted!',
-#             description=f'<@!{user.id}> Your Application Has Been Accepted Contact Ceo For Role',
-#             color=embed_color
-#         )
-#         await channel.send(embed=embed)
-#     else:
-#         await em(ctx, 'You Dont Have Perms!')
 
 
 @client.command()
@@ -406,72 +454,91 @@ async def img(ctx, *, m):
     await ctx.send(embed=embed)
 
 
-# q_list = [
-#     'How much Experience do you have on discord?',
-#     'For how much time can you be active in the server and chat?',
-#     'You must use our tag on your name. [ !🅵🆉YOUR NAME ]',
-#     'How will you handle abuse raid in the server?'
-# ]
+q_list = [
+    'How much Experience do you have on discord?',
+    'How will you handle abuse raid in the server?',
+    'Would you invite people and be active in chat?'
+]
 
-# a_list = []
+a_list = []
 
 
-# @client.command(aliases=['apply'])
-# async def application(ctx):
+@client.command(aliases=['apply'])
+async def application(ctx):
 
-#     global embed_color
+    global embed_color
 
-#     a_list = []
-#     submit_channel = client.get_channel(810284722059870228)
-#     channel = await ctx.author.create_dm()
+    a_list = []
+    submit_channel = client.get_channel(830005339033829426)
+    channel = await ctx.author.create_dm()
 
-#     await ctx.send(embed=await em(ctx, 'Application has been started Check Dm', r=True))
+    await ctx.send(embed=await em(ctx, f'Application has been started by {ctx.message.author.name} Check Dms', r=True))
 
-#     def check(m):
-#         return m.content is not None and m.channel == channel and m.author.id != 814881819849392138
+    def check(m):
+        return m.content is not None and m.channel == channel and m.author.id != client.user.id
 
-#     for question in q_list:
-#         question = await em(ctx, question, r=True)
-#         await channel.send(embed=question)
-#         try:
-#             msg = await client.wait_for('message', timeout=60.0, check=check)
-#         except asyncio.TimeoutError:
-#             await channel.send(embed=await em(ctx, 'Timeout, You didnt reply in 60 seconds', r=True))
-#             return
-#         a_list.append(msg.content)
+    for question in q_list:
+        question = await em(ctx, question, r=True)
+        await channel.send(embed=question)
+        try:
+            msg = await client.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            await channel.send(embed=await em(ctx, 'Timeout, You didnt reply in 60 seconds', r=True))
+            return
+        a_list.append(msg.content)
 
-#     await channel.send(embed=await em(ctx, 'End of questions - say "yes" to finish/submit it or "no" to leave it.', r=True))
+    await channel.send(embed=await em(ctx, 'End of questions - say "yes" to finish/submit it or "no" to leave it.', r=True))
 
-#     try:
-#         msg = await client.wait_for('message', timeout=60.0, check=check)
-#     except asyncio.TimeoutError:
-#         await channel.send(embed=await em(ctx, 'Timeout, You didnt reply in 60 seconds', r=True))
-#         return
+    try:
+        msg = await client.wait_for('message', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await channel.send(embed=await em(ctx, 'Timeout, You didnt reply in 60 seconds', r=True))
+        return
 
-#     if "yes" in msg.content.lower():
-#         embed = discord.Embed(
-#             title='Application By:',
-#             description=f'<@!{ctx.author.id}>',
-#             color=embed_color
-#         )
-#         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+    if "yes" in msg.content.lower():
+        embed = discord.Embed(
+            title='Application By:',
+            description=f'<@!{ctx.author.id}>',
+            color=embed_color
+        )
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
-#         for n, answer in enumerate(a_list):
-#             embed.add_field(name=f'{q_list[n]}',
-#                             value=f'{answer}', inline=False)
+        for n, answer in enumerate(a_list):
+            embed.add_field(name=f'{q_list[n]}',
+                            value=f'{answer}', inline=False)
 
-#         await submit_channel.send(embed=embed)
+        await submit_channel.send(embed=embed)
 
-#         embed = await em(ctx, 'Your application has been sent successfully!', r=True)
-#         await channel.send(embed=embed)
+        embed = await em(ctx, 'Your application has been sent successfully!', r=True)
+        await channel.send(embed=embed)
 
-#     elif "no" in msg.content.lower():
-#         embed = await em(ctx, 'Discarded successfully', r=True)
-#         await channel.send(embed=embed)
+    elif "no" in msg.content.lower():
+        embed = await em(ctx, 'Discarded successfully', r=True)
+        await channel.send(embed=embed)
 
-#     else:
-#         embed = await em(ctx, 'You had to answer a yes or no, application wasn\'t sent!', r=True)
-#         await channel.send(embed=embed)
+    else:
+        embed = await em(ctx, 'You had to answer a yes or no, application wasn\'t sent!', r=True)
+        await channel.send(embed=embed)
+
+
+
+@client.command()
+async def accept(ctx, user: discord.Member = None):
+    global embed_color
+    if ctx.message.author.guild_permissions.administrator:
+        channel = client.get_channel(830005385670033429)
+        embed = discord.Embed(
+            title='Application Accepted!',
+            description=f'<@!{user.id}> Your Application Has Been Accepted Contact Ceo For Role',
+            color=embed_color
+        )
+        await channel.send(embed=embed)
+        await channel.send(f'<@!{user.id}>')
+    else:
+        await em(ctx, 'You Dont Have Perms!')
+
+
+
 
 @client.command()
 async def emojify(ctx, *, msg):
@@ -764,6 +831,58 @@ async def create_role(ctx, *, rname):
 async def chperms(ctx):
     if ctx.message.author.guild_permissions.administrator or ctx.message.author.id == 825765301236924456:
         await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False, add_reactions=False)
+
+
+
+@client.command()
+async def invites(ctx, member: discord.Member=None):
+
+    total = 0
+
+    if member == None:
+        member = ctx.message.author
+
+    with open('invites.json', 'r') as f:
+        data = json.loads(f.read())
+
+    for d in data:
+        mid = f"{member.id}"
+        if d == mid:
+            total += len(data[d])
+
+    await em(ctx, f'You have {total} invites!')
+
+
+@client.command()
+async def invites_details(ctx, member: discord.Member=None):
+
+    global embed_color
+
+    total = []
+
+    if member == None:
+        member = ctx.message.author
+
+    with open('invites.json', 'r') as f:
+        data = json.loads(f.read())
+
+    for d in data:
+        mid = f"{member.id}"
+        if d == mid:
+            total = data[d]
+
+
+    if len(total) > 0:
+
+        total = ' '.join([f'<@!{_}>' for _ in total])
+
+        embed = discord.Embed(title='You have invited these people!', description=total, color=embed_color)
+
+        await ctx.send(embed=embed)
+
+    else:
+        await em(ctx, f'You have 0 invites')
+
 
 
 
