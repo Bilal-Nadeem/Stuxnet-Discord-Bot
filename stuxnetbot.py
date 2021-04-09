@@ -128,7 +128,7 @@ async def on_member_remove(member):
                 if _ == member.id:
                     break
 
-        channel = client.get_channel(830089659878211634)
+        channel = client.get_channel(829994884521918474)
         embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> that was invited by <@!{checking}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
         await channel.send(embed=embed)
 
@@ -148,7 +148,7 @@ async def on_member_remove(member):
         await channel.send(embed=embed)
 
     with open("invites.json", "rb") as file:
-        channel = client.get_channel(829994884521918474)
+        channel = client.get_channel(830089659878211634)
         await channel.send("Your file is:", file=discord.File(file, "invites.json"))
 
 
