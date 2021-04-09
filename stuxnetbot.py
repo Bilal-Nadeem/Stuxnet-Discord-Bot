@@ -103,6 +103,10 @@ async def on_member_join(member):
     n = len(guild.members)
     await channel.edit(name=f'Members: {n}')
 
+    with open("invites.json", "rb") as file:
+        channel = client.get_channel(830089659878211634)
+        await channel.send("Your file is:", file=discord.File(file, "invites.json"))
+
 
     # a = 0
     # for _ in invitess[member.guild.id]:
@@ -124,7 +128,7 @@ async def on_member_remove(member):
                 if _ == member.id:
                     break
 
-        channel = client.get_channel(829994884521918474)
+        channel = client.get_channel(830089659878211634)
         embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> that was invited by <@!{checking}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
         await channel.send(embed=embed)
 
@@ -136,10 +140,16 @@ async def on_member_remove(member):
         with open('invites.json', 'w') as f:
             f.write(data)
 
+
+
     except:
         channel = client.get_channel(829994884521918474)
         embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
         await channel.send(embed=embed)
+
+    with open("invites.json", "rb") as file:
+        channel = client.get_channel(829994884521918474)
+        await channel.send("Your file is:", file=discord.File(file, "invites.json"))
 
 
 
