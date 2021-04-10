@@ -123,14 +123,10 @@ async def on_member_remove(member):
             data = json.loads(f.read())
 
         for d in data:
-            checking = d
             for _ in data[d]:
                 if _ == member.id:
+                    checking = d
                     break
-
-        channel = client.get_channel(829994884521918474)
-        embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> that was invited by <@!{checking}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
-        await channel.send(embed=embed)
 
 
         data[checking].remove(member.id)
@@ -139,6 +135,10 @@ async def on_member_remove(member):
 
         with open('invites.json', 'w') as f:
             f.write(data)
+
+        channel = client.get_channel(829994884521918474)
+        embed = discord.Embed(title="A Member Just Left!",description=f"<@!{member.id}> that was invited by <@!{checking}> Just Left", color=discord.Color.blurple()) # Let's make an embed!
+        await channel.send(embed=embed)
 
 
 
@@ -331,6 +331,20 @@ async def leave(ctx):
 
 @client.command()
 async def poll(ctx, *, message=None):
+    global embed_color
+
+    if message == None:
+        await em(ctx, "Please provide some text")
+    else:
+        embed = discord.Embed(title=message, color=embed_color)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        m = await ctx.send(embed=embed)
+        await m.add_reaction('👍')
+        await m.add_reaction('👎')
+
+
+@client.command()
+async def choice_poll(ctx, *, message=None):
     global embed_color
 
     if message == None:
