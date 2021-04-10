@@ -58,6 +58,53 @@ async def on_ready():
     for guild in client.guilds:
         invitess[guild.id] = await guild.invites()
 
+with open('badwords.txt', 'r') as f:
+    bad_words = f.read().strip().split('\n')
+
+print(bad_words)
+@client.event
+async def on_message(message):
+    global bad_words
+    if message.guild.id == 829709301630369862 and not message.author.guild_permissions.administrator:
+        if message.content.lower() in bad_words:
+            await message.delete()
+
+    await client.process_commands(message)
+
+@client.command()
+async def add_bad_words(ctx, *, m):
+    if ctx.message.author.guild_permissions.administrator or ctx.message.author.id == 825765301236924456:
+        with open('badwords.txt', 'r') as f:
+            b = [_ for _ in f.read().strip().split('\n') if _ != '']
+
+        print(b)
+        c = [_ for _ in m.split(' ')]
+        print(c)
+        for _ in c:
+            b.append(_)
+
+        print(b)
+
+        with open('badwords.txt', 'w') as f:
+            for _ in b:
+                print(_)
+                f.write(_+'\n')
+
+        await em(ctx, 'Done')
+    else:
+        await em(ctx, 'You dont have perms!')
+
+
+@client.command()
+async def list_bad_words(ctx, *, m):
+    if ctx.message.author.guild_permissions.administrator or ctx.message.author.id == 825765301236924456:
+        with open('badwords.txt', 'r') as f:
+            b = f.read()
+
+    ctx.send(f'```{b}```')
+
+
+
 
 @client.event
 async def on_member_join(member):
@@ -116,6 +163,9 @@ async def on_member_join(member):
 #will add feature that if bot added and its not by me or ateeq then it gets kicked
 @client.event
 async def on_member_remove(member):
+    global invitess
+
+    invitess[member.guild.id] = await member.guild.invites()
 
     try:
 
