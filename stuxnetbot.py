@@ -12,7 +12,7 @@ import random
 from gtts import gTTS
 from bs4 import BeautifulSoup
 import json
-import random
+import re
 
 # gonna add things like showing which song currently playing, status stuff like that
 # moderation commands tommorow
@@ -61,15 +61,34 @@ async def on_ready():
 with open('badwords.txt', 'r') as f:
     bad_words = f.read().strip().split('\n')
 
-print(bad_words)
-@client.event
-async def on_message(message):
-    global bad_words
-    if message.guild.id == 829709301630369862 and not message.author.guild_permissions.administrator:
-        if message.content.lower() in bad_words:
-            await message.delete()
+eod = False
 
-    await client.process_commands(message)
+@client.event
+async def on_message(m):
+    global bad_words, eod
+    if m.guild.id == 829709301630369862 and not m.author.guild_permissions.administrator:
+        if m.content.lower() in bad_words:
+            await m.delete()
+
+    if m.channel.id in [829728048781852713] and m.author.id != client.user.id:
+        if m.content.lower() == '.enable':
+            eod = True
+        elif m.content.lower() == '.disable':
+            eod = False
+
+        if eod:
+            querystring = {"bid":"178","key":"sX5A2PcYZbsN5EY6","uid":"mashape","msg":m.content}
+            headers = {
+            'x-rapidapi-key': "3f1e388716msh65e428495fb4fc7p1107ebjsne523fc561130",
+            'x-rapidapi-host': "acobot-brainshop-ai-v1.p.rapidapi.com"
+            }
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f'https://acobot-brainshop-ai-v1.p.rapidapi.com/get',headers=headers, params=querystring) as r:
+                    r = await r.json()
+                    r = r['cnt']
+                    await m.channel.send(r)
+
+    await client.process_commands(m)
 
 @client.command()
 async def add_bad_words(ctx, *, m):
@@ -96,12 +115,28 @@ async def add_bad_words(ctx, *, m):
 
 
 @client.command()
-async def list_bad_words(ctx, *, m):
+async def list_bad_words(ctx):
     if ctx.message.author.guild_permissions.administrator or ctx.message.author.id == 825765301236924456:
         with open('badwords.txt', 'r') as f:
             b = f.read()
 
-    ctx.send(f'```{b}```')
+    await ctx.send(f'```{b}```')
+
+
+@client.command()
+async def list_roles(ctx):
+    global embed_color
+    l = []
+    for _ in ctx.guild.members:
+        names = [a.name for a in _.roles]
+        if 'Admin' in names:
+            l.append(f'Admin: <@!{_.id}>')
+        elif 'Moderator' in names:
+            l.append(f'Moderator: <@!{_.id}>')
+
+    l = '\n'.join(l)
+    embed = discord.Embed(title='Staff', description=l, color=embed_color)
+    await ctx.send(embed=embed)
 
 
 
@@ -882,7 +917,19 @@ async def create_role_menu(ctx, *, m):
 async def create_embed(ctx, *, m):
     global embed_color
     if ctx.message.author.guild_permissions.administrator or ctx.message.author.id == 825765301236924456:
+        m = await get_emo(ctx, m)
         await em(ctx, m)
+
+
+@client.command()
+async def ce(ctx, t, *, m):
+    global embed_color
+    if ctx.message.author.guild_permissions.administrator or ctx.message.author.id == 825765301236924456:
+        m = await get_emo(ctx, m)
+        embed = discord.Embed(title=t, description=f'**{m}**', color=embed_color)
+        await ctx.send(embed=embed)
+
+
 
 @client.command()
 async def add_reaction(ctx, m_id, *, r):
@@ -978,6 +1025,50 @@ async def dare(ctx):
         dr = random.choice(f.read().split('\n'))
 
     await em(ctx, dr)
+
+
+async def fe(ctx, emn):
+    if type(emn) == str:
+        if ':' in emn:
+            emn = emn[1:-1]
+
+        for _ in ctx.guild.emojis:
+            if _.name == emn:
+                print(_.id)
+                a = _
+
+        return str(a)
+
+tof = re.compile(r':\w+:')
+
+async def get_emo(ctx, m):
+    global tof
+    l = tof.findall(m)
+    if len(l) > 0:
+        for _ in l:
+            m = m.replace(_, await fe(ctx, _))
+
+    return m
+
+@client.command()
+async def emo(ctx, *, m):
+    await ctx.message.delete()
+
+    m = await get_emo(ctx, m)
+    
+    hooks = await ctx.channel.webhooks()
+    if hooks:
+        for hook in hooks:
+            if hook.name == ctx.channel.name:
+                await hook.send(content=m, username=ctx.author.display_name, avatar_url=ctx.author.avatar_url)
+
+    else:
+        hook = await ctx.channel.create_webhook(name=ctx.channel.name)
+        await hook.send(content=m, username=ctx.author.display_name, avatar_url=ctx.author.avatar_url)
+
+
+
+
 
 
 
