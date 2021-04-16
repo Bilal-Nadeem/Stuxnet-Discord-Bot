@@ -1,1 +1,1 @@
-worker: python stuxnetbot.py
+worker: python main.py
