@@ -21,3 +21,4 @@ ffmpeg
 discord.py[voice]
 pip
 pymongo==3.11.3
+dnspython
