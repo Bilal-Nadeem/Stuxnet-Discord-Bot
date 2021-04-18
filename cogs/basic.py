@@ -2,6 +2,10 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 from global_functions import prefix, em
+import re
+
+with open('pokemons.txt', 'r') as f:
+	pokemons = f.read()
 
 
 class Basic(commands.Cog):
@@ -18,6 +22,26 @@ class Basic(commands.Cog):
 	async def ping(self, ctx):
 		await em(ctx, f'{round(self.client.latency * 1000)}ms')
 
+	@commands.Cog.listener()
+	async def on_message(self, message):
+		m = ''
+		for _ in message.content[15:-1]:
+			if _ != '\\':
+				m += _
+
+		if message.content[:14] == "The pokémon is":
+			ph = ''
+			for a in m:
+				if a != '_':
+					ph += a
+				else:
+					ph += '.'
+			print(ph)
+			ph = ph.lower()
+			c = re.compile(ph)
+			l = c.findall(pokemons)
+			print(l)
+			await message.channel.send(l)
 
 def setup(client):
 	client.add_cog(Basic(client))
