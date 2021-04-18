@@ -39,9 +39,12 @@ class Basic(commands.Cog):
 			print(ph)
 			ph = ph.lower()
 			c = re.compile(ph)
-			l = c.findall(pokemons)
+			l = list(set(c.findall(pokemons)))
 			print(l)
-			await message.channel.send(l)
+			if len(l) < 6:
+				await message.channel.send(' '.join(l))
+			else:
+				await message.channel.send('I was unable to find the hint')
 
 def setup(client):
 	client.add_cog(Basic(client))
