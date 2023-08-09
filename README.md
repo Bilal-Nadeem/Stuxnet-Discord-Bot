@@ -14,8 +14,10 @@ Custom Discord bot for Stuxnet Discord Server.
 2. Upload this code to heroku and run
 
 ## Issues
-There are some issues in this code as I wrote it back in 2021. 
+
+There are some issues in this code as I wrote it back in 2021. No plan on updating it.
 1. Unorganized Files
 2. No config file (Need to manually change variables in code)
 3. Lack of debugging (Basic Handling / Ignoring Exceptions)
-4. Basic Programming Structure
+
+© Bilal Nadeem, 2021-2023
